@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Talking JX — Upgraded (games, wardrobe, emotes, dances)</title>
+<style>
+  :root{
+    --bg1:#667eea; --bg2:#764ba2; --glass: rgba(255,255,255,0.12);
+    --panel:#1e1e2a; --accent1:#ff6ec4; --accent2:#4facfe;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));color:#fff;min-height:100vh;
+  }
+  header{padding:20px;text-align:center;background:rgba(0,0,0,0.15);backdrop-filter:blur(6px);}
+  header h1{font-size:28px;margin-bottom:6px;letter-spacing:0.6px}
+  .wrap{max-width:1200px;margin:20px auto;padding:18px}
+  .layout{display:grid;grid-template-columns:420px 1fr 320px;gap:18px}
+  /* Left column: character */
+  .stage{background:rgba(255,255,255,0.06);border-radius:18px;padding:18px;border:1px solid rgba(255,255,255,0.06);position:relative;overflow:visible}
+  .subtitle{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;background:rgba(0,0,0,0.6);padding:10px 18px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)}
+  .character-wrap{display:flex;justify-content:center;padding:14px}
+  svg.character{width:320px;height:auto;cursor:pointer;transition:transform .25s ease}
+  svg.character:hover{transform:scale(1.02)}
+  /* wardrobe */
+  .wardrobe{margin-top:12px;background:rgba(0,0,0,0.35);padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+  .wardrobe h3{font-size:14px;margin:6px 0}
+  .wardrobe-grid{display:flex;flex-wrap:wrap;gap:8px}
+  .cloth{width:64px;height:64px;background:rgba(255,255,255,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:grab;border:1px solid rgba(255,255,255,0.06)}
+  .cloth:active{cursor:grabbing;transform:scale(.98)}
+  .trash{margin-top:8px;padding:8px;border-radius:8px;background:rgba(255,50,50,0.15);text-align:center;font-size:13px}
+  /* center column */
+  .controls{background:rgba(0,0,0,0.28);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:none;cursor:pointer;font-weight:600}
+  .btn-primary{background:linear-gradient(90deg,var(--accent1),#ff9ea8);color:#111}
+  .btn-accent{background:linear-gradient(90deg,var(--accent2),#00f2fe);color:#081229}
+  .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+  .panel{margin-top:12px;background:rgba(0,0,0,0.25);padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+  label{display:block;margin-bottom:6px;font-size:13px}
+  input[type="range"]{width:100%}
+  .game-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .game-card{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.08));padding:8px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.04);}
+  /* right column */
+  .right-col{display:flex;flex-direction:column;gap:12px}
+  .emotes{display:flex;flex-wrap:wrap;gap:8px}
+  .emote-btn{width:72px;height:72px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px}
+  .dance-list{display:flex;flex-direction:column;gap:8px}
+  .mini-game-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:90%;max-width:720px;background:rgba(10,10,14,0.98);z-index:9999;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);display:none}
+  .mini-game-panel.active{display:block}
+  .game-area{height:340px;background:linear-gradient(180deg,#0d1223,#071026);border-radius:10px;position:relative;overflow:hidden;padding:12px}
+  .star{position:absolute;font-size:26px;cursor:pointer;user-select:none}
+  .tickle-zone{position:absolute;left:50%;transform:translateX(-50%);bottom:130px;width:120px;height:90px;border-radius:60px;/* debug */pointer-events:auto}
+  .score{font-weight:700;margin-top:10px}
+  .close-mini{position:absolute;right:10px;top:8px;background:#ff7070;padding:6px 10px;border-radius:8px;border:none;cursor:pointer}
+  /* animations for emotes/dances */
+  .emotion-happy{animation:bounce .8s ease}
+  @keyframes bounce{0%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-18px)}100%{transform:translateX(-50%) translateY(0)}}
+  .dancing-1{animation:dance1 1s infinite}
+  @keyframes dance1{0%{transform:translateX(-50%) rotate(0)}25%{transform:translateX(-45%) rotate(-8deg)}50%{transform:translateX(-50%) rotate(0)}75%{transform:translateX(-55%) rotate(8deg)}100%{transform:translateX(-50%) rotate(0)}}
+  .dancing-2{animation:dance2 .9s infinite}
+  @keyframes dance2{0%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.03)}100%{transform:translateX(-50%) scale(1)}}
+  /* responsive */
+  @media (max-width:1000px){.layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>✨ Talking JX — Upgraded</h1>
+  <div style="font-size:13px;opacity:.9">More mini-games, improved speak, emotes, dances, and a drag & drop wardrobe</div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+    <!-- LEFT: Character + wardrobe -->
+    <div class="stage">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>JX — Character</strong>
+        <div style="font-size:12px;opacity:.85">Click JX or use controls</div>
+      </div>
+
+      <div class="character-wrap" id="characterWrap">
+        <!-- Improved SVG character with layers for clothing/head/hair/accessories -->
+        <svg id="jxSVG" class="character" viewBox="0 0 320 480" xmlns="http://www.w3.org/2000/svg" aria-label="JX character" role="img">
+          <!-- background shadow -->
+          <ellipse cx="160" cy="430" rx="120" ry="20" fill="rgba(0,0,0,0.25)"/>
+          <!-- legs -->
+          <g id="legs">
+            <rect x="120" y="300" width="28" height="90" rx="12" fill="#ffd4a3" stroke="#2f2f2f" stroke-width="1"/>
+            <rect x="176" y="300" width="28" height="90" rx="12" fill="#ffd4a3" stroke="#2f2f2f" stroke-width="1"/>
+            <ellipse cx="134" cy="400" rx="18" ry="10" fill="#7873f5" stroke="#222"/>
+            <ellipse cx="190" cy="400" rx="18" ry="10" fill="#7873f5" stroke="#222"/>
+          </g>
+
+          <!-- body base -->
+          <g id="bodyBase">
+            <rect x="110" y="200" width="100" height="120" rx="20" fill="#ff6ec4" stroke="#222" stroke-width="1.5"/>
+          </g>
+
+          <!-- clothing layer (clothes will be appended here) -->
+          <g id="clothesLayer"></g>
+
+          <!-- head group -->
+          <g id="headGroup" transform="translate(0,0)">
+            <ellipse id="face" cx="160" cy="130" rx="55" ry="65" fill="#ffd4a3" stroke="#222" stroke-width="1.5"/>
+            <!-- hair base -->
+            <path id="hairBase" d="M105 96 Q128 40 160 48 Q192 36 215 96 Q230 120 200 120 Q190 110 160 110 Q130 110 120 120 Q85 118 105 96Z" fill="#2c1810" stroke="#222"/>
+            <!-- eyes -->
+            <g id="eyes">
+              <ellipse cx="140" cy="124" rx="8" ry="10" fill="#2c1810"/>
+              <ellipse cx="180" cy="124" rx="8" ry="10" fill="#2c1810"/>
+              <ellipse cx="142" cy="120" rx="2.6" ry="3.6" fill="#fff"/>
+              <ellipse cx="182" cy="120" rx="2.6" ry="3.6" fill="#fff"/>
+            </g>
+            <!-- blush + smile -->
+            <ellipse cx="124" cy="146" rx="7" ry="4" fill="#ffb6c1" opacity="0.6"/>
+            <ellipse cx="196" cy="146" rx="7" ry="4" fill="#ffb6c1" opacity="0.6"/>
+            <path id="smile" d="M140 160 Q160 174 180 160" stroke="#2f2f2f" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- accessory layer -->
+          <g id="accessoryLayer"></g>
+
+          <!-- debug tickle zone (invisible but clickable) -->
+          <g id="tickleZone" style="pointer-events:auto" transform="translate(0,0)">
+            <!-- transparent ellipse area mapping to tummy -->
+            <ellipse cx="160" cy="220" rx="52" ry="32" fill="rgba(255,255,255,0)" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="subtitle" id="subtitle">Hi! I'm JX — click me, play games, or dress me up ✨</div>
+
+      <div class="wardrobe" id="wardrobe">
+        <h3>Wardrobe — drag items onto JX</h3>
+        <div class="wardrobe-grid" id="wardrobeGrid">
+          <!-- clothing swatches -->
+          <div class="cloth" draggable="true" data-cloth='{"type":"shirt","id":"shirtPink"}' title="Pink Shirt">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect rx="6" width="46" height="46" fill="#ff6ec4"/></svg>
+          </div>
+          <div class="cloth" draggable="true" data-cloth='{"type":"shirt","id":"shirtBlue"}' title="Blue Shirt">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect rx="6" width="46" height="46" fill="#4facfe"/></svg>
+          </div>
+          <div class="cloth" draggable="true" data-cloth='{"type":"shirt","id":"shirtPurple"}' title="Purple Hoodie">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect rx="6" width="46" height="46" fill="#764ba2"/></svg>
+          </div>
+
+          <div class="cloth" draggable="true" data-cloth='{"type":"hat","id":"hatCap"}' title="Cap">
+            <svg width="46" height="46" viewBox="0 0 46 46"><path d="M6 22 Q23 6 40 22 L38 30 Q23 22 8 30Z" fill="#222"/></svg>
+          </div>
+          <div class="cloth" draggable="true" data-cloth='{"type":"glasses","id":"glasses1"}' title="Glasses">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect x="5" y="18" width="14" height="10" rx="3" fill="#fff"/><rect x="27" y="18" width="14" height="10" rx="3" fill="#fff"/></svg>
+          </div>
+
+          <div class="cloth" draggable="true" data-cloth='{"type":"accessory","id":"scarf"}' title="Scarf">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect x="6" y="22" width="34" height="8" rx="3" fill="#ffcf66"/></svg>
+          </div>
+
+          <div class="cloth" draggable="true" data-cloth='{"type":"dress","id":"dressStar"}' title="Star Dress">
+            <svg width="46" height="46" viewBox="0 0 46 46"><rect rx="6" width="46" height="46" fill="#8ad28d"/></svg>
+          </div>
+
+        </div>
+        <div class="trash" id="trash">Drag here to remove an item</div>
+      </div>
+    </div>
+
+    <!-- CENTER: controls & mini-games -->
+    <div>
+      <div class="controls panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <button class="btn btn-primary" id="speakBtn">🎤 Speak</button>
+            <button class="btn btn-accent" id="speakTextBtn">⌨️ Type & Speak</button>
+            <button class="btn btn-ghost" id="resetBtn">♻️ Reset</button>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:12px;opacity:.85">Volume</div>
+            <input type="range" id="vol" min="0" max="100" value="70"/>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <label>Mini-games</label>
+          <div class="game-list" id="gameList">
+            <div class="game-card" data-game="tickle">🤏 Tickle JX — make her giggle</div>
+            <div class="game-card" data-game="catchStars">⭐ Catch Stars — click falling stars</div>
+            <div class="game-card" data-game="rhythm">🎶 Rhythm Dance — press when the beat hits</div>
+            <div class="game-card" data-game="memory">🧠 Memory Match — flip pairs</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:12px">
+          <label>Character options</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="styleSelect">
+              <option value="default">Default Pink</option>
+              <option value="blue">Blue Theme</option>
+              <option value="purple">Purple Theme</option>
+            </select>
+            <button class="btn btn-ghost" id="randomize">🎲 Randomize Outfit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game modal -->
+      <div id="miniGame" class="mini-game-panel">
+        <button class="close-mini" id="closeMini">✕</button>
+        <h3 id="miniTitle">Mini game</h3>
+        <div id="miniBody" class="game-area"></div>
+        <div class="score" id="miniScore"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: emotes & dances -->
+    <div class="right-col">
+      <div class="panel">
+        <label>Emotes</label>
+        <div class="emotes">
+          <div class="emote-btn" data-emote="happy">😊</div>
+          <div class="emote-btn" data-emote="shy">😳</div>
+          <div class="emote-btn" data-emote="excited">🤩</div>
+          <div class="emote-btn" data-emote="surprised">😲</div>
+          <div class="emote-btn" data-emote="sleepy">😴</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <label>Dances</label>
+        <div class="dance-list">
+          <button class="btn btn-primary" data-dance="1">🕺 Wave & Sway</button>
+          <button class="btn btn-accent" data-dance="2">💃 Bop & Bounce</button>
+          <button class="btn btn-ghost" id="stopDance">⏹️ Stop Dance</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <label>Instructions</label>
+        <div style="font-size:13px;line-height:1.4;color:rgba(255,255,255,0.95)">
+          • Drag clothing from the wardrobe and drop on JX to equip. <br>
+          • Click the inventory item again to toggle. <br>
+          • Use Speak to talk to JX (browser support required). <br>
+          • Play mini-games to unlock playful responses.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ========== state ========== */
+  const state = {
+    volume: 70,
+    language: 'en',
+    clothes: {}, // placed clothing elements by id
+  };
+
+  /* ========== utilities ========== */
+  function setSubtitle(text, timeout=3500){
+    const el = document.getElementById('subtitle');
+    el.textContent = text;
+    if(timeout>0){
+      clearTimeout(el._t);
+      el._t = setTimeout(()=>{ el.textContent = "What do you want to do next? ✨" }, timeout);
+    }
+  }
+
+  /* ========== sound (tiny beep helper) ========== */
+  function beep(freq=600, time=0.08){
+    try{
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = freq; o.type='sine';
+      g.gain.value = state.volume/200;
+      o.start(); o.stop(ac.currentTime + time);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + time);
+    }catch(e){}
+  }
+
+  /* ========== character interactions ========== */
+  const jxSVG = document.getElementById('jxSVG');
+  jxSVG.addEventListener('click', ()=> {
+    playRandomEmotion();
+    beep(850,0.06);
+  });
+
+  function playRandomEmotion(){
+    const emotes = ['happy','shy','excited','surprised'];
+    const e = emotes[Math.floor(Math.random()*emotes.length)];
+    triggerEmotion(e);
+  }
+
+  function triggerEmotion(name){
+    const wrap = document.getElementById('characterWrap');
+    // clear classes
+    wrap.querySelector('svg').classList.remove('emotion-happy','emotion-shy','emotion-excited','emotion-surprised');
+    // add class mapping
+    if(name==='happy'){ wrap.querySelector('svg').classList.add('emotion-happy'); setSubtitle("Yay! I'm happy! 😊"); beep(920,0.08); speakText("I'm so happy!"); }
+    if(name==='shy'){ wrap.querySelector('svg').classList.add('emotion-shy'); setSubtitle("Oh... you noticed me... 😳"); beep(720,0.06); }
+    if(name==='excited'){ wrap.querySelector('svg').classList.add('emotion-excited'); setSubtitle("Let's go! So excited! 🚀"); beep(1200,0.08); speakText("Let's go! I'm excited!"); }
+    if(name==='surprised'){ wrap.querySelector('svg').classList.add('emotion-surprised'); setSubtitle("Oh my! 😲"); beep(640,0.06); }
+    // remove after small delay
+    setTimeout(()=>{ wrap.querySelector('svg').classList.remove('emotion-happy','emotion-shy','emotion-excited','emotion-surprised'); }, 1200);
+  }
+
+  /* ========== speech: robust speak & fallback ========== */
+  const speakBtn = document.getElementById('speakBtn');
+  const speakTextBtn = document.getElementById('speakTextBtn');
+  const volControl = document.getElementById('vol');
+  volControl.addEventListener('input', ()=> state.volume = volControl.value);
+
+  function speakText(text){
+    if(!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.volume = state.volume/100;
+    u.rate = 1.05; u.pitch = 1.1;
+    u.lang = (state.language==='zh')? 'zh-CN' : (state.language==='ja')? 'ja-JP' : 'en-US';
+    window.speechSynthesis.cancel(); // stop others
+    window.speechSynthesis.speak(u);
+  }
+
+  speakBtn.addEventListener('click', async ()=>{
+    // try speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SpeechRecognition){
+      // fallback: show prompt
+      const t = prompt("Speech recognition not supported. Type something for JX to respond:");
+      if(t) { setSubtitle(`You: ${t}`); setTimeout(()=>speakText("You said: " + t), 500); }
+      return;
+    }
+    const rec = new SpeechRecognition();
+    rec.lang = (state.language==='zh')? 'zh-CN' : (state.language==='ja')? 'ja-JP' : 'en-US';
+    rec.interimResults = false; rec.maxAlternatives = 1;
+    setSubtitle("🎧 Listening... speak now");
+    beep(600,0.06);
+    rec.onresult = (ev)=> {
+      const t = ev.results[0][0].transcript;
+      setSubtitle("You said: " + t);
+      setTimeout(()=> speakText("You said " + t), 500);
+      triggerEmotion('excited');
+    };
+    rec.onerror = ()=> { setSubtitle("Couldn't hear you — try typing instead"); }
+    rec.onend = ()=> { setTimeout(()=>setSubtitle("What else?"), 1200); };
+    rec.start();
+  });
+
+  speakTextBtn.addEventListener('click', ()=> {
+    const t = prompt("Type what you want JX to say:");
+    if(t) { setSubtitle("You typed: "+t); speakText(t); }
+  });
+
+  /* ========== wardrobe drag & drop ========== */
+  const wardrobeGrid = document.getElementById('wardrobeGrid');
+  const clothesLayer = document.getElementById('clothesLayer');
+  const accessoryLayer = document.getElementById('accessoryLayer');
+  const trash = document.getElementById('trash');
+
+  wardrobeGrid.querySelectorAll('.cloth').forEach(el=>{
+    el.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', el.dataset.cloth);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
+  });
+
+  // allow drop onto svg area (characterWrap)
+  const characterWrap = document.getElementById('characterWrap');
+  characterWrap.addEventListener('dragover', e=> e.preventDefault());
+  characterWrap.addEventListener('drop', e=> {
+    e.preventDefault();
+    const data = e.dataTransfer.getData('text/plain');
+    if(!data) return;
+    try{
+      const obj = JSON.parse(data);
+      equipCloth(obj);
+    }catch(e){}
+  });
+
+  trash.addEventListener('dragover', e=> e.preventDefault());
+  trash.addEventListener('drop', e=>{
+    e.preventDefault();
+    // remove last clothing or all? we'll remove all for demo
+    Object.keys(state.clothes).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.remove();
+    });
+    state.clothes = {};
+    setSubtitle("Wardrobe cleared");
+  });
+
+  function equipCloth({type,id}){
+    if(state.clothes[id]){
+      // toggle removal
+      const el = document.getElementById(id);
+      if(el){ el.remove(); delete state.clothes[id]; setSubtitle("Removed "+id); return; }
+    }
+    // create svg nodes depending on type
+    let node = null;
+    if(type==='shirt'){
+      node = document.createElementNS('http://www.w3.org/2000/svg','g');
+      node.id = id;
+      // a simple shirt path aligned to body
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d','M120 200 Q160 170 200 200 L200 260 Q160 290 120 260 Z');
+      path.setAttribute('fill', id.includes('Blue')? '#4facfe' : id.includes('Purple')? '#764ba2' : '#ff6ec4');
+      path.setAttribute('stroke','#222'); path.setAttribute('stroke-width','1.5');
+      node.appendChild(path);
+      clothesLayer.appendChild(node);
+      state.clothes[id] = node;
+      setSubtitle("Equipped " + id);
+      beep(980,0.06);
+    } else if(type==='hat'){
+      node = document.createElementNS('http://www.w3.org/2000/svg','g');
+      node.id = id;
+      const hat = document.createElementNS('http://www.w3.org/2000/svg','path');
+      hat.setAttribute('d','M120 96 Q160 64 200 96 L190 100 Q160 88 130 100Z');
+      hat.setAttribute('fill','#222'); hat.setAttribute('stroke','#111');
+      node.appendChild(hat);
+      accessoryLayer.appendChild(node);
+      state.clothes[id] = node;
+      setSubtitle("Hat on!"); beep(700,0.06);
+    } else if(type==='glasses'){
+      node = document.createElementNS('http://www.w3.org/2000/svg','g');
+      node.id = id;
+      const l = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      l.setAttribute('x','132'); l.setAttribute('y','116'); l.setAttribute('width','18'); l.setAttribute('height','10'); l.setAttribute('rx','3');
+      const r = l.cloneNode();
+      r.setAttribute('x','170');
+      [l,r].forEach(x=>{ x.setAttribute('fill','#fff'); x.setAttribute('opacity','0.9'); x.setAttribute('stroke','#333'); node.appendChild(x)});
+      accessoryLayer.appendChild(node);
+      state.clothes[id] = node; setSubtitle("Glasses equipped"); beep(840,0.06);
+    } else if(type==='accessory'){
+      node = document.createElementNS('http://www.w3.org/2000/svg','g'); node.id = id;
+      const sc = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      sc.setAttribute('x','120'); sc.setAttribute('y','210'); sc.setAttribute('width','80'); sc.setAttribute('height','12'); sc.setAttribute('rx','6');
+      sc.setAttribute('fill','#ffcf66'); node.appendChild(sc);
+      clothesLayer.appendChild(node);
+      state.clothes[id] = node; setSubtitle("Scarf added"); beep(780,0.06);
+    } else if(type==='dress'){
+      node = document.createElementNS('http://www.w3.org/2000/svg','g'); node.id = id;
+      const d = document.createElementNS('http://www.w3.org/2000/svg','path');
+      d.setAttribute('d','M110 200 Q160 230 210 200 L210 280 Q160 320 110 280Z'); d.setAttribute('fill','#8ad28d'); d.setAttribute('stroke','#222');
+      clothesLayer.appendChild(node); node.appendChild(d);
+      state.clothes[id] = node; setSubtitle("Dress equipped"); beep(860,0.06);
+    }
+  }
+
+  /* ========== mini-games ========== */
+  const games = document.getElementById('gameList');
+  const miniPanel = document.getElementById('miniGame');
+  const miniBody = document.getElementById('miniBody');
+  const miniTitle = document.getElementById('miniTitle');
+  const miniScore = document.getElementById('miniScore');
+
+  games.querySelectorAll('.game-card').forEach(card=>{
+    card.addEventListener('click', ()=> {
+      const g = card.dataset.game;
+      openGame(g);
+    });
+  });
+
+  document.getElementById('closeMini').addEventListener('click', closeMini);
+
+  function openGame(name){
+    miniPanel.classList.add('active'); miniBody.innerHTML=''; miniScore.textContent=''; miniTitle.textContent = {
+      'tickle':'Tickle JX!',
+      'catchStars':'Catch the Stars!',
+      'rhythm':'Rhythm Dance',
+      'memory':'Memory Match'
+    }[name] || 'Game';
+    if(name==='tickle') startTickle();
+    if(name==='catchStars') startCatchStars();
+    if(name==='rhythm') startRhythm();
+    if(name==='memory') startMemory();
+  }
+
+  function closeMini(){
+    miniPanel.classList.remove('active'); miniBody.innerHTML=''; miniScore.textContent=''; setSubtitle("Back from the game!");
+  }
+
+  /* --- TICKLE --- */
+  function startTickle(){
+    miniScore.textContent = 'Giggles: 0';
+    let giggles = 0;
+    // show an enlarged JX belly region clickable
+    const area = document.createElement('div');
+    area.style.width='100%'; area.style.height='100%'; area.style.position='relative';
+    // add a big JX belly representation
+    const belly = document.createElement('div');
+    belly.style.width='160px'; belly.style.height='120px'; belly.style.borderRadius='90px';
+    belly.style.background='linear-gradient(180deg,#ffdde1,#ffd4a3)'; belly.style.position='absolute';
+    belly.style.left='50%'; belly.style.top='35%'; belly.style.transform='translate(-50%,-50%)';
+    belly.style.boxShadow='inset 0 -10px 20px rgba(0,0,0,0.12)';
+    belly.style.display='flex'; belly.style.alignItems='center'; belly.style.justifyContent='center';
+    belly.style.cursor='pointer';
+    belly.innerHTML = '<div style="font-size:26px">😄</div>';
+    area.appendChild(belly);
+    miniBody.appendChild(area);
+
+    // tickle interactions
+    belly.addEventListener('click', ()=>{
+      giggles++;
+      miniScore.textContent = 'Giggles: ' + giggles;
+      setSubtitle("Hehe! That tickles! 😂");
+      beep(1100,0.06);
+      // small vibration of SVG on parent
+      const s = document.querySelector('.character'); s.style.transform='translateX(-50%) scale(1.03)';
+      setTimeout(()=> s.style.transform='translateX(-50%) scale(1)',220);
+      if(giggles >= 6){
+        setSubtitle("You made JX laugh so much! Prize: small dance 🎉");
+        triggerEmotion('excited');
+        playDance(1);
+      }
+    });
+  }
+
+  /* --- CATCH STARS --- */
+  function startCatchStars(){
+    miniScore.textContent = 'Score: 0';
+    let score = 0;
+    const area = document.createElement('div'); area.style.width='100%'; area.style.height='100%'; area.style.position='relative';
+    miniBody.appendChild(area);
+    const gravity = 6000; // ms between spawn reduction
+    let spawnTimer = null;
+    function spawnStar(){
+      const star = document.createElement('div'); star.className='star';
+      star.style.left = Math.random()*80 + '%';
+      star.style.top = '-40px';
+      star.textContent = '⭐';
+      area.appendChild(star);
+      // fall
+      const duration = 3500 + Math.random()*1500;
+      star.animate([ {transform:'translateY(0)'},{transform:'translateY(420px)'} ], {duration});
+      // click handler
+      star.addEventListener('click', ()=>{
+        score++; miniScore.textContent = 'Score: '+score; star.remove(); beep(900,0.04);
+        if(score===10){ setSubtitle("Nice! 10 stars — JX smiles!"); triggerEmotion('happy'); }
+      });
+      // remove after
+      setTimeout(()=> star.remove(), duration+80);
+    }
+    spawnTimer = setInterval(spawnStar,800);
+    // stop after 20s
+    setTimeout(()=> {
+      clearInterval(spawnTimer);
+      setSubtitle("Game over! Score: " + score);
+      miniScore.textContent = 'Final: ' + score;
+    },20000);
+  }
+
+  /* --- RHYTHM DANCE (simple press on beat) --- */
+  function startRhythm(){
+    let beat = 0; let hits = 0; miniScore.textContent = 'Hits: 0';
+    const bpm = 100; const interval = 60000/bpm;
+    const area = document.createElement('div'); area.style.width='100%'; area.style.height='100%'; area.style.position='relative';
+    const info = document.createElement('div'); info.style.position='absolute'; info.style.left='50%'; info.style.top='20%'; info.style.transform='translateX(-50%)'; info.style.fontSize='20px';
+    info.textContent = 'Press SPACE when the circle is green';
+    area.appendChild(info);
+    const circle = document.createElement('div'); circle.style.width='90px';circle.style.height='90px';circle.style.borderRadius='50%';circle.style.background='#fff';circle.style.position='absolute';
+    circle.style.left='50%';circle.style.top='50%';circle.style.transform='translate(-50%,-50%)';area.appendChild(circle);
+    miniBody.appendChild(area);
+
+    const iv = setInterval(()=> {
+      beat++;
+      // flash: green window for a short time on beat
+      circle.style.background = '#88ff88';
+      setTimeout(()=> circle.style.background='#ffffff', interval*0.35);
+    }, interval);
+
+    function onKey(e){
+      if(e.code==='Space'){
+        // check if we pressed close to beat window: assume if color currently green we count
+        if(circle.style.background === 'rgb(136, 255, 136)' || circle.style.background === '#88ff88'){
+          hits++; miniScore.textContent = 'Hits: '+hits; beep(1300,0.04); triggerEmotion('happy');
+        } else {
+          // miss
+          beep(400,0.04);
+        }
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    // stop after 18s
+    setTimeout(()=> {
+      clearInterval(iv); document.removeEventListener('keydown', onKey);
+      setSubtitle('Rhythm done — Hits: ' + hits);
+      miniScore.textContent = 'Final: ' + hits;
+    },18000);
+  }
+
+  /* --- MEMORY MATCH (simple) --- */
+  function startMemory(){
+    // create a 4x2 grid of hidden cards with pairs of emojis
+    const pairs = ['🍓','⭐','🍩','🎈','🍓','⭐','🍩','🎈'];
+    shuffleArray(pairs);
+    let flipped = []; let matches = 0;
+    const grid = document.createElement('div'); grid.style.display='grid'; grid.style.gridTemplateColumns='repeat(4,1fr)'; grid.style.gap='10px';
+    grid.style.padding='14px';
+    pairs.forEach((emoji,i)=>{
+      const c = document.createElement('div'); c.style.background='#111829'; c.style.height='80px'; c.style.borderRadius='8px'; c.style.display='flex'; c.style.alignItems='center'; c.style.justifyContent='center'; c.style.fontSize='26px'; c.style.cursor='pointer';
+      c.dataset.val = emoji; c.textContent='';
+      c.addEventListener('click', ()=>{
+        if(c.classList.contains('matched')||flipped.includes(c)) return;
+        c.textContent = emoji; flipped.push(c);
+        if(flipped.length===2){
+          if(flipped[0].dataset.val === flipped[1].dataset.val){
+            flipped.forEach(x=>{ x.classList.add('matched'); });
+            flipped = []; matches++; if(matches===4){ setSubtitle('All matched! Nice memory ✨'); triggerEmotion('excited'); }
+          } else {
+            setTimeout(()=>{ flipped.forEach(x=> x.textContent=''); flipped=[]; },600);
+          }
+        }
+      });
+      grid.appendChild(c);
+    });
+    miniBody.appendChild(grid);
+    miniScore.textContent = 'Matches: 0';
+    // update matches on interval
+    const int = setInterval(()=> miniScore.textContent = 'Matches: ' + matches, 400);
+    setTimeout(()=> { clearInterval(int); setSubtitle('Memory ended — matches: ' + matches); },22000);
+  }
+
+  // small helper
+  function shuffleArray(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+  /* ========== emotes and dances ========== */
+  document.querySelectorAll('.emote-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      const e = btn.dataset.emote;
+      triggerEmotion(e);
+    });
+  });
+
+  document.querySelectorAll('[data-dance]').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      playDance(btn.dataset.dance);
+    });
+  });
+  document.getElementById('stopDance').addEventListener('click', stopDance);
+
+  function playDance(which){
+    stopDance();
+    const svg = document.querySelector('.character');
+    if(which==='1'){ svg.classList.add('dancing-1'); setSubtitle("Dancing: Wave & Sway"); speakText("Let's dance!"); }
+    if(which==='2'){ svg.classList.add('dancing-2'); setSubtitle("Dancing: Bop & Bounce"); speakText("Here we go!"); }
+  }
+  function stopDance(){ document.querySelector('.character').classList.remove('dancing-1','dancing-2'); setSubtitle("Dance stopped"); }
+
+  /* ========== style / randomize / reset ========== */
+  document.getElementById('styleSelect').addEventListener('change', (e)=> {
+    const v = e.target.value;
+    const face = document.getElementById('bodyBase');
+    if(v==='default'){ /* pink */ document.querySelector('#bodyBase rect').setAttribute('fill','#ff6ec4'); }
+    if(v==='blue'){ document.querySelector('#bodyBase rect').setAttribute('fill','#4facfe'); }
+    if(v==='purple'){ document.querySelector('#bodyBase rect').setAttribute('fill','#764ba2'); }
+    setSubtitle('Style changed');
+  });
+
+  document.getElementById('randomize').addEventListener('click', ()=> {
+    const options = ['shirtPink','shirtBlue','shirtPurple','hatCap','glasses1','scarf','dressStar'];
+    const pick = options[Math.floor(Math.random()*options.length)];
+    equipCloth({type: pick.includes('shirt')? 'shirt' : pick.includes('hat')? 'hat' : pick.includes('glasses')? 'glasses' : pick.includes('scarf')? 'accessory' : 'dress', id: pick});
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=> {
+    // remove clothes
+    Object.keys(state.clothes).forEach(id=> {
+      const e = document.getElementById(id); if(e) e.remove();
+    }); state.clothes = {}; setSubtitle('Reset done'); stopDance();
+  });
+
+  /* ========== small polish ========== */
+  // clicking a wardrobe tile spawns it centered on character for easier clicking (optional)
+  wardrobeGrid.addEventListener('dblclick', e=>{
+    const tile = e.target.closest('.cloth');
+    if(!tile) return;
+    try{ const obj = JSON.parse(tile.dataset.cloth); equipCloth(obj); }catch{}
+  });
+
+  // initial subtitle
+  setSubtitle("Welcome! Try dragging clothes, speaking, or playing a game — have fun!");
+
+  /* ========== accessibility: keyboard shortcuts ======= */
+  window.addEventListener('keydown', (e)=>{
+    if(e.key==='1') openGame('tickle');
+    if(e.key==='2') openGame('catchStars');
+    if(e.key==='3') openGame('rhythm');
+    if(e.key==='4') openGame('memory');
+    if(e.key==='m') speakBtn.click();
+  });
+
+  // expose for console tinkering
+  window.jx = { equipCloth, triggerEmotion, playDance, stopDance, speakText };
+
+</script>
+</body>
+</html>
